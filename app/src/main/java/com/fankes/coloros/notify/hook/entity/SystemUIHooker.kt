@@ -526,10 +526,14 @@ object SystemUIHooker : YukiBaseHooker() {
         compatCustomIcon(context, isGrayscaleIcon, packageName).also { customTriple ->
             when {
                 ConfigData.isEnableNotifyIconForceAppIcon -> iconView.apply {
-                    val appIcon = appIcons[packageName]
-                        ?: context.appIconOf(packageName)?.also { appIcons[packageName] = it }
+                    val appIcon = synchronized(appIcons) {
+                        appIcons[packageName] ?: context.appIconOf(packageName)?.also { appIcons[packageName] = it }
+                    }
                     /** 重新设置图标 */
-                    if (appIcon != null && drawable.constantState != appIcon.constantState) setImageDrawable(appIcon)
+                    if (appIcon != null &&
+                        drawable !== appIcon &&
+                        (drawable.constantState == null || drawable.constantState != appIcon.constantState)
+                    ) setImageDrawable(appIcon)
                     /** 设置默认样式 */
                     setDefaultNotifyIconViewStyle(resetColorFilter = false)
                 }
