@@ -526,10 +526,12 @@ object SystemUIHooker : YukiBaseHooker() {
         compatCustomIcon(context, isGrayscaleIcon, packageName).also { customTriple ->
             when {
                 ConfigData.isEnableNotifyIconForceAppIcon -> iconView.apply {
+                    val appIcon = appIcons[packageName]
+                        ?: context.appIconOf(packageName)?.also { appIcons[packageName] = it }
                     /** 重新设置图标 */
-                    setImageDrawable(appIcons[packageName] ?: context.appIconOf(packageName))
+                    if (appIcon != null && drawable.constantState != appIcon.constantState) setImageDrawable(appIcon)
                     /** 设置默认样式 */
-                    setDefaultNotifyIconViewStyle()
+                    setDefaultNotifyIconViewStyle(resetColorFilter = false)
                 }
                 (customTriple.first != null && customTriple.third.not()) || isGrayscaleIcon -> iconView.apply {
                     /** 设置不要裁切到边界 */
@@ -633,7 +635,7 @@ object SystemUIHooker : YukiBaseHooker() {
     }
 
     /** 设置默认通知栏通知图标样式 */
-    private fun ImageView.setDefaultNotifyIconViewStyle() {
+    private fun ImageView.setDefaultNotifyIconViewStyle(resetColorFilter: Boolean = true) {
         /** 设置裁切到边界 */
         clipToOutline = true
         /** 设置一个圆角轮廓裁切 */
@@ -650,7 +652,7 @@ object SystemUIHooker : YukiBaseHooker() {
         /** 清除背景 */
         background = null
         /** 清除着色 */
-        colorFilter = null
+        if (resetColorFilter) colorFilter = null
     }
 
     /** 注册生命周期 */
@@ -1117,7 +1119,7 @@ object SystemUIHooker : YukiBaseHooker() {
                                         }
                                         doParse()
                                         /** 延迟重新设置防止部分机型的系统重新设置图标出现图标着色后黑白块问题 */
-                                        delayedRun(ms = 1500) { doParse() }
+                                        if (ConfigData.isEnableNotifyIconForceAppIcon.not()) delayedRun(ms = 1500) { doParse() }
                                     }
                                 }
                             }
