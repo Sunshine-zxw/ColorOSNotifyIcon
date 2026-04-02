@@ -952,7 +952,7 @@ object SystemUIHooker : YukiBaseHooker() {
                                                     context = context,
                                                     nf = nf,
                                                     isGrayscaleIcon = isGrayscaleIcon(context, iconDrawable),
-                                                    packageName = context.packageName,
+                                                    packageName = nf.packageName,
                                                     drawable = iconDrawable,
                                                     iconColor = it.color,
                                                     iconView = this,
@@ -986,7 +986,7 @@ object SystemUIHooker : YukiBaseHooker() {
                                             context = context,
                                             nf = nf,
                                             isGrayscaleIcon = isGrayscaleIcon(context, iconDrawable),
-                                            packageName = context.packageName,
+                                            packageName = nf.packageName,
                                             drawable = iconDrawable,
                                             iconColor = it.color,
                                             iconView = this
@@ -1029,7 +1029,7 @@ object SystemUIHooker : YukiBaseHooker() {
                                             context = context,
                                             nf = nf,
                                             isGrayscaleIcon = isGrayscaleIcon(context, iconDrawable),
-                                            packageName = context.packageName,
+                                            packageName = nf.packageName,
                                             drawable = iconDrawable,
                                             iconColor = it.color,
                                             iconView = this
@@ -1104,7 +1104,7 @@ object SystemUIHooker : YukiBaseHooker() {
                                             context = context,
                                             nf = nf,
                                             isGrayscaleIcon = isGrayscaleIcon(context, iconDrawable),
-                                            packageName = context.packageName,
+                                            packageName = nf.packageName,
                                             drawable = iconDrawable,
                                             iconColor = it.color,
                                             iconView = this
@@ -1117,7 +1117,7 @@ object SystemUIHooker : YukiBaseHooker() {
 
                 method {
                     name { it == "resolveHeaderViews" || it == "onContentUpdated" }
-                }.hookAll().after {
+                }.hookAll().before {
                     firstFieldOrNull { name = "mIcon" }?.of(instance)?.get<ImageView>()?.apply {
                         ExpandableNotificationRowClass.resolve().optional()
                             .firstMethodOrNull { name = "getEntry" }
@@ -1136,17 +1136,13 @@ object SystemUIHooker : YukiBaseHooker() {
                                                 context = context,
                                                 nf = nf,
                                                 isGrayscaleIcon = isGrayscaleIcon(context, iconDrawable),
-                                                packageName = context.packageName,
+                                                packageName = nf.packageName,
                                                 drawable = iconDrawable,
                                                 iconColor = it.color,
                                                 iconView = this
                                             )
                                         }
                                         doParse()
-                                        /** 延迟重新设置防止部分机型的系统重新设置图标出现图标着色后黑白块问题 */
-                                        /** 强制 APP 图标模式下跳过延迟重新设置，防止偶发性闪烁 */
-                                        if (ConfigData.isEnableNotifyIconForceAppIcon.not())
-                                            delayedRun(ms = 1500) { doParse() }
                                     }
                                 }
                             }
